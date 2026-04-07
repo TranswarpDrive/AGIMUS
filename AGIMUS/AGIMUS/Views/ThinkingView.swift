@@ -96,16 +96,20 @@ final class ThinkingView: UIView {
     func configure(content: String, isStreaming: Bool, isExpanded: Bool) {
         contentTextView.text = content
         if isStreaming {
-            headerButton.setTitle("💭  思考中…", for: .normal)
+            headerButton.setTitle(L("💭  思考中…", "💭  Thinking…"), for: .normal)
         } else {
-            headerButton.setTitle("💭  思考过程（\(content.count) 字）", for: .normal)
+            headerButton.setTitle(L("💭  思考过程（\(content.count) 字）",
+                                    "💭  Reasoning (\(content.count) chars)"),
+                                  for: .normal)
         }
         setExpanded(isExpanded, animated: false)
     }
 
     func appendThinkingChunk(_ chunk: String) {
         contentTextView.text += chunk
-        headerButton.setTitle("💭  思考中…(\(contentTextView.text.count) 字)", for: .normal)
+        headerButton.setTitle(L("💭  思考中…(\(contentTextView.text.count) 字)",
+                                "💭  Thinking… (\(contentTextView.text.count) chars)"),
+                              for: .normal)
     }
 
     // MARK: - Expand / Collapse

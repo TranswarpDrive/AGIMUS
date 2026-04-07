@@ -8,19 +8,29 @@ final class SearchProviderListViewController: UITableViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "搜索服务"
+        applyLocalization()
         navigationItem.largeTitleDisplayMode = .never
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
                                                             target: self, action: #selector(addProvider))
         NotificationCenter.default.addObserver(self, selector: #selector(themeChanged),
                                                name: ThemeManager.didChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(languageChanged),
+                                               name: .appLanguageDidChange, object: nil)
         applyTheme()
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
 
     @objc private func themeChanged() { applyTheme() }
+    @objc private func languageChanged() {
+        applyLocalization()
+        tableView.reloadData()
+    }
+
+    private func applyLocalization() {
+        title = L("搜索服务", "Search Services")
+    }
 
     private func applyTheme() {
         tableView.backgroundColor = .agBackground
@@ -53,18 +63,19 @@ final class SearchProviderListViewController: UITableViewController {
         cell.selectedBackgroundView = selView
 
         if providers.isEmpty {
-            cell.textLabel?.text = "暂无搜索服务"
+            cell.textLabel?.text = L("暂无搜索服务", "No search services yet")
             cell.textLabel?.textColor = UIColor.themed(
                 light: UIColor(white: 0.50, alpha: 1),
                 dark:  UIColor(white: 0.50, alpha: 1))
-            cell.detailTextLabel?.text = "点击 + 添加"
+            cell.detailTextLabel?.text = L("点击 + 添加", "Tap + to add")
             cell.accessoryType = .none
             cell.selectionStyle = .none
         } else {
             let sp = providers[indexPath.row]
-            cell.textLabel?.text = sp.name
+            cell.textLabel?.text = sp.displayName
             cell.textLabel?.textColor = .agTextBot
-            cell.detailTextLabel?.text = sp.type.displayName + " · 最多 \(sp.maxResults) 条"
+            cell.detailTextLabel?.text = L("\(sp.type.displayName) · 最多 \(sp.maxResults) 条",
+                                           "\(sp.type.displayName) · up to \(sp.maxResults) results")
             cell.detailTextLabel?.textColor = UIColor.themed(
                 light: UIColor(white: 0.45, alpha: 1),
                 dark:  UIColor(white: 0.55, alpha: 1))
@@ -105,7 +116,9 @@ final class SearchProviderListViewController: UITableViewController {
     // MARK: - Add
 
     @objc private func addProvider() {
-        let sheet = UIAlertController(title: "选择服务类型", message: nil, preferredStyle: .actionSheet)
+        let sheet = UIAlertController(title: L("选择服务类型", "Choose Service Type"),
+                                      message: nil,
+                                      preferredStyle: .actionSheet)
         for t in SearchProviderType.allCases {
             sheet.addAction(UIAlertAction(title: t.displayName, style: .default) { [weak self] _ in
                 let sp = SearchProvider(type: t)
@@ -113,7 +126,7 @@ final class SearchProviderListViewController: UITableViewController {
                 self?.navigationController?.pushViewController(vc, animated: true)
             })
         }
-        sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        sheet.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
         present(sheet, animated: true)
     }
 }

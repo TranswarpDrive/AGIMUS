@@ -301,7 +301,9 @@ final class ChatToolbarView: UIView {
             : UIColor.themed(light: .gray, dark: UIColor(white: 0.55, alpha: 1))
         thinkingButton.setTitleColor(color, for: .normal)
         thinkingButton.layer.borderColor = color.cgColor
-        thinkingButton.setTitle(enabled ? "💭 思考 ON" : "💭 思考 OFF", for: .normal)
+        thinkingButton.setTitle(enabled ? L("💭 思考 ON", "💭 Thinking ON")
+                                        : L("💭 思考 OFF", "💭 Thinking OFF"),
+                                for: .normal)
         refreshLayout()
     }
 
@@ -311,7 +313,7 @@ final class ChatToolbarView: UIView {
     }
 
     func setSearchLabel(_ label: String) {
-        let isOff = label == "关闭搜索"
+        let isOff = AppLanguage.isSearchDisabledLabel(label)
         let color: UIColor = isOff
             ? UIColor.themed(light: .gray, dark: UIColor(white: 0.55, alpha: 1))
             : UIColor.themed(light: UIColor(red: 0.0, green: 0.48, blue: 0.8, alpha: 1),

@@ -12,6 +12,7 @@ final class SettingsStore {
     private let titleModelKey    = "titleModel"
     private let searchProvsKey   = "searchProviders"
     private let appearanceKey    = "appearanceMode"   // 0=跟随系统 1=浅色 2=深色
+    private let languageKey      = "appLanguage"
 
     private init() {}
 
@@ -138,5 +139,20 @@ final class SettingsStore {
     var appearanceMode: Int {
         get { defaults.integer(forKey: appearanceKey) }
         set { defaults.set(newValue, forKey: appearanceKey) }
+    }
+
+    // MARK: - App language
+
+    var appLanguage: AppLanguage {
+        get {
+            AppLanguage(rawValue: defaults.string(forKey: languageKey) ?? "") ?? .chinese
+        }
+        set {
+            let oldValue = appLanguage
+            defaults.set(newValue.rawValue, forKey: languageKey)
+            if oldValue != newValue {
+                NotificationCenter.default.post(name: .appLanguageDidChange, object: nil)
+            }
+        }
     }
 }

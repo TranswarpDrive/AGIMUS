@@ -4,6 +4,10 @@ import UIKit
 final class SessionListViewController: UITableViewController {
 
     private var sessions: [ChatSession] = []
+    private lazy var settingsBtn = UIBarButtonItem(title: "",
+                                                   style: .plain,
+                                                   target: self,
+                                                   action: #selector(openSettings))
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -15,25 +19,36 @@ final class SessionListViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SessionCell")
 
         let addBtn = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(newSession))
-        let settingsBtn = UIBarButtonItem(title: "设置", style: .plain, target: self, action: #selector(openSettings))
         navigationItem.rightBarButtonItem = addBtn
         navigationItem.leftBarButtonItem  = settingsBtn
 
         NotificationCenter.default.addObserver(self,
             selector: #selector(themeChanged),
             name: ThemeManager.didChange, object: nil)
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(languageChanged),
+            name: .appLanguageDidChange, object: nil)
+        applyLocalization()
         applyTheme()
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
 
     @objc private func themeChanged() { applyTheme() }
+    @objc private func languageChanged() {
+        applyLocalization()
+        tableView.reloadData()
+    }
 
     private func applyTheme() {
         tableView.backgroundColor = .agBackground
         tableView.separatorColor  = .agSeparator
         ThemeManager.shared.styleNavigationBar(navigationController?.navigationBar)
         tableView.reloadData()
+    }
+
+    private func applyLocalization() {
+        settingsBtn.title = L("设置", "Settings")
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -90,7 +105,7 @@ final class SessionListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView,
                             leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
-        let rename = UIContextualAction(style: .normal, title: "重命名") { [weak self] _, _, done in
+        let rename = UIContextualAction(style: .normal, title: L("重命名", "Rename")) { [weak self] _, _, done in
             self?.renameSession(at: indexPath)
             done(true)
         }
@@ -118,13 +133,13 @@ final class SessionListViewController: UITableViewController {
 
     private func renameSession(at indexPath: IndexPath) {
         let session = sessions[indexPath.row]
-        let alert = UIAlertController(title: "重命名", message: nil, preferredStyle: .alert)
+        let alert = UIAlertController(title: L("重命名", "Rename"), message: nil, preferredStyle: .alert)
         alert.addTextField { tf in
             tf.text = session.title
             tf.clearButtonMode = .whileEditing
         }
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "确定", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L("确定", "OK"), style: .default) { [weak self] _ in
             guard let self = self,
                   let text = alert.textFields?.first?.text,
                   !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }

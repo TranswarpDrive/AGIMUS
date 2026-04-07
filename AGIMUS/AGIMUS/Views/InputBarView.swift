@@ -24,7 +24,7 @@ final class InputBarView: UIView {
 
     private let placeholderLabel: UILabel = {
         let l = UILabel()
-        l.text = "发消息…"
+        l.text = L("发消息…", "Message…")
         l.font = UIFont.systemFont(ofSize: 16)
         l.textColor = UIColor.lightGray
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -64,9 +64,13 @@ final class InputBarView: UIView {
         super.init(frame: frame)
         setup()
         applyTheme()
+        applyLocalization()
         NotificationCenter.default.addObserver(self,
             selector: #selector(themeChanged),
             name: ThemeManager.didChange, object: nil)
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(languageChanged),
+            name: .appLanguageDidChange, object: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
     deinit { NotificationCenter.default.removeObserver(self) }
@@ -108,6 +112,7 @@ final class InputBarView: UIView {
 
     // MARK: - Theme
     @objc private func themeChanged() { applyTheme() }
+    @objc private func languageChanged() { applyLocalization() }
 
     func applyTheme() {
         backgroundColor = .agInputBackground
@@ -120,6 +125,10 @@ final class InputBarView: UIView {
 
         sendButton.backgroundColor = .agBubbleUser
         stopButton.backgroundColor = .agBubbleUser
+    }
+
+    private func applyLocalization() {
+        placeholderLabel.text = L("发消息…", "Message…")
     }
 
     // MARK: - Public

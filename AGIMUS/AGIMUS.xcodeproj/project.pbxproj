@@ -24,6 +24,7 @@
 		AA00000CAA00000CAA00000C /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000BAA00000BAA00000B /* SessionStore.swift */; };
 		AA00000EAA00000EAA00000E /* ChatAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000DAA00000DAA00000D /* ChatAPIService.swift */; };
 		AA000010AA000010AA000010 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000FAA00000FAA00000F /* Extensions.swift */; };
+		DD000001DD000001DD000001 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000002DD000002DD000002 /* AppLanguage.swift */; };
 		CC000021 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000020 /* ThemeManager.swift */; };
 		AA000012AA000012AA000012 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011AA000011AA000011 /* MarkdownRenderer.swift */; };
 		AA000014AA000014AA000014 /* InputBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000013AA000013AA000013 /* InputBarView.swift */; };
@@ -81,6 +82,7 @@
 		AA00000BAA00000BAA00000B /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		AA00000DAA00000DAA00000D /* ChatAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAPIService.swift; sourceTree = "<group>"; };
 		AA00000FAA00000FAA00000F /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		DD000002DD000002DD000002 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		CC000020 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		AA000011AA000011AA000011 /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
 		AA000013AA000013AA000013 /* InputBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputBarView.swift; sourceTree = "<group>"; };
@@ -207,6 +209,7 @@
 		AA000022AA000022AA000022 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				DD000002DD000002DD000002 /* AppLanguage.swift */,
 				AA00000FAA00000FAA00000F /* Extensions.swift */,
 				AA000011AA000011AA000011 /* MarkdownRenderer.swift */,
 				CC000020 /* ThemeManager.swift */,
@@ -378,6 +381,7 @@
 				AA00000CAA00000CAA00000C /* SessionStore.swift in Sources */,
 				AA00000EAA00000EAA00000E /* ChatAPIService.swift in Sources */,
 				AA000010AA000010AA000010 /* Extensions.swift in Sources */,
+				DD000001DD000001DD000001 /* AppLanguage.swift in Sources */,
 				AA000012AA000012AA000012 /* MarkdownRenderer.swift in Sources */,
 				AA000014AA000014AA000014 /* InputBarView.swift in Sources */,
 				AA000016AA000016AA000016 /* MessageCell.swift in Sources */,

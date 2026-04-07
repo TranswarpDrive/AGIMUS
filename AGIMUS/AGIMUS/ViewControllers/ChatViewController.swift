@@ -65,6 +65,9 @@ final class ChatViewController: UIViewController {
         NotificationCenter.default.addObserver(self,
             selector: #selector(themeChanged),
             name: ThemeManager.didChange, object: nil)
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(languageChanged),
+            name: .appLanguageDidChange, object: nil)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -78,6 +81,10 @@ final class ChatViewController: UIViewController {
     deinit { NotificationCenter.default.removeObserver(self) }
 
     @objc private func themeChanged() { applyTheme() }
+    @objc private func languageChanged() {
+        refreshToolbar()
+        tableView.reloadData()
+    }
 
     private func applyTheme() {
         view.backgroundColor = .agBackground
@@ -156,7 +163,7 @@ final class ChatViewController: UIViewController {
            !searchProviders.contains(where: { $0.id == sel.id }) {
             selectedSearchProvider = nil
         }
-        toolbar.setSearchLabel(selectedSearchProvider?.name ?? "关闭搜索")
+        toolbar.setSearchLabel(selectedSearchProvider?.displayName ?? AppLanguage.searchDisabledLabel)
     }
 
     // MARK: - Keyboard
@@ -324,7 +331,8 @@ final class ChatViewController: UIViewController {
                 let text: String
                 switch res {
                 case .success(let formatted): text = formatted
-                case .failure(let err):       text = "搜索失败: \(err.localizedDescription)"
+                case .failure(let err):       text = L("搜索失败: \(err.localizedDescription)",
+                                                     "Search failed: \(err.localizedDescription)")
                 }
                 lock.lock(); results.append((callId: callId, result: text)); lock.unlock()
                 group.leave()
@@ -385,7 +393,7 @@ final class ChatViewController: UIViewController {
     // MARK: - Auto title
 
     private func tryGenerateTitle() {
-        guard session.title == "新对话" else { return }
+        guard AppLanguage.isDefaultSessionTitle(session.title) else { return }
         let userMsgs = session.messages.filter { $0.role == .user  && !$0.isError }
         let botMsgs  = session.messages.filter { $0.role == .assistant && $0.toolCallsJSON == nil }
         guard userMsgs.count == 1, let firstUser = userMsgs.first,
@@ -398,8 +406,7 @@ final class ChatViewController: UIViewController {
         cfg.maxTokens     = 60
         cfg.useStream     = false
 
-        let sys  = ChatMessage(role: .system,
-                               content: "请根据以下对话内容，用不超过8个汉字生成一个简洁的中文标题。只输出标题本身，不加任何标点、引号或额外说明。")
+        let sys  = ChatMessage(role: .system, content: AppLanguage.titleGenerationPrompt)
         let msgs = [sys, firstUser, firstBot]
 
         ChatAPIService.shared.sendOneshot(messages: msgs, config: cfg, apiKey: titleKey) { [weak self] result in
@@ -442,11 +449,19 @@ final class ChatViewController: UIViewController {
 
     @objc private func showMore() {
         let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        sheet.addAction(UIAlertAction(title: "重命名会话",      style: .default)    { [weak self] _ in self?.renameSession() })
-        sheet.addAction(UIAlertAction(title: "重新生成标题",    style: .default)    { [weak self] _ in self?.regenerateTitle() })
-        sheet.addAction(UIAlertAction(title: "编辑最后一条消息", style: .default)    { [weak self] _ in self?.editLastMessage() })
-        sheet.addAction(UIAlertAction(title: "清空消息",        style: .destructive){ [weak self] _ in self?.clearMessages() })
-        sheet.addAction(UIAlertAction(title: "取消",            style: .cancel))
+        sheet.addAction(UIAlertAction(title: L("重命名会话", "Rename Chat"), style: .default) { [weak self] _ in
+            self?.renameSession()
+        })
+        sheet.addAction(UIAlertAction(title: L("重新生成标题", "Regenerate Title"), style: .default) { [weak self] _ in
+            self?.regenerateTitle()
+        })
+        sheet.addAction(UIAlertAction(title: L("编辑最后一条消息", "Edit Last Message"), style: .default) { [weak self] _ in
+            self?.editLastMessage()
+        })
+        sheet.addAction(UIAlertAction(title: L("清空消息", "Clear Messages"), style: .destructive) { [weak self] _ in
+            self?.clearMessages()
+        })
+        sheet.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
         present(sheet, animated: true)
     }
 
@@ -457,8 +472,10 @@ final class ChatViewController: UIViewController {
             $0.role == .assistant && $0.toolCallsJSON == nil && !$0.content.isEmpty
         }
         guard let firstUser = userMsgs.first, let firstBot = botMsgs.first else {
-            let a = UIAlertController(title: "无法生成标题", message: "需要至少一轮完整对话", preferredStyle: .alert)
-            a.addAction(UIAlertAction(title: "好", style: .default))
+            let a = UIAlertController(title: L("无法生成标题", "Unable to Generate Title"),
+                                      message: L("需要至少一轮完整对话", "At least one complete round of conversation is required."),
+                                      preferredStyle: .alert)
+            a.addAction(UIAlertAction(title: L("好", "OK"), style: .default))
             present(a, animated: true)
             return
         }
@@ -468,8 +485,7 @@ final class ChatViewController: UIViewController {
         cfg.activeModel   = SettingsStore.shared.effectiveTitleModel
         cfg.maxTokens     = 60
         cfg.useStream     = false
-        let sys  = ChatMessage(role: .system,
-                               content: "请根据以下对话内容，用不超过8个汉字生成一个简洁的中文标题。只输出标题本身，不加任何标点、引号或额外说明。")
+        let sys  = ChatMessage(role: .system, content: AppLanguage.titleGenerationPrompt)
         ChatAPIService.shared.sendOneshot(messages: [sys, firstUser, firstBot],
                                           config: cfg, apiKey: titleKey) { [weak self] result in
             guard let self = self, case .success(let raw) = result else { return }
@@ -486,10 +502,10 @@ final class ChatViewController: UIViewController {
     }
 
     private func renameSession() {
-        let a = UIAlertController(title: "重命名", message: nil, preferredStyle: .alert)
+        let a = UIAlertController(title: L("重命名", "Rename"), message: nil, preferredStyle: .alert)
         a.addTextField { [weak self] tf in tf.text = self?.session.title }
-        a.addAction(UIAlertAction(title: "取消", style: .cancel))
-        a.addAction(UIAlertAction(title: "确定", style: .default) { [weak self] _ in
+        a.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        a.addAction(UIAlertAction(title: L("确定", "OK"), style: .default) { [weak self] _ in
             guard let self = self,
                   let text = a.textFields?.first?.text?.trimmingCharacters(in: .whitespaces),
                   !text.isEmpty else { return }
@@ -503,10 +519,10 @@ final class ChatViewController: UIViewController {
 
     private func editLastMessage() {
         guard let last = session.messages.last(where: { $0.role == .user && !$0.isError }) else { return }
-        let a = UIAlertController(title: "编辑消息", message: nil, preferredStyle: .alert)
+        let a = UIAlertController(title: L("编辑消息", "Edit Message"), message: nil, preferredStyle: .alert)
         a.addTextField { tf in tf.text = last.content }
-        a.addAction(UIAlertAction(title: "取消", style: .cancel))
-        a.addAction(UIAlertAction(title: "重发", style: .default) { [weak self] _ in
+        a.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        a.addAction(UIAlertAction(title: L("重发", "Resend"), style: .default) { [weak self] _ in
             guard let self = self,
                   let text = a.textFields?.first?.text?.trimmingCharacters(in: .whitespaces),
                   !text.isEmpty else { return }
@@ -527,8 +543,8 @@ final class ChatViewController: UIViewController {
     }
 
     private func showError(_ message: String) {
-        let a = UIAlertController(title: "请求失败", message: message, preferredStyle: .alert)
-        a.addAction(UIAlertAction(title: "好", style: .default))
+        let a = UIAlertController(title: L("请求失败", "Request Failed"), message: message, preferredStyle: .alert)
+        a.addAction(UIAlertAction(title: L("好", "OK"), style: .default))
         present(a, animated: true)
     }
 }
@@ -602,7 +618,7 @@ extension ChatViewController: MessageCellDelegate {
     func messageCellDidTapCopy(_ cell: MessageCell, text: String) {
         UIPasteboard.general.string = text
         let hud = UILabel()
-        hud.text = "已复制"
+        hud.text = L("已复制", "Copied")
         hud.font = UIFont.systemFont(ofSize: 14)
         hud.textColor = .white
         hud.backgroundColor = UIColor(white: 0, alpha: 0.72)
@@ -639,14 +655,15 @@ extension ChatViewController: ChatToolbarViewDelegate {
         let provider = SettingsStore.shared.activeProvider
         let current  = session.preferredModel ?? provider.activeModel
         guard !provider.models.isEmpty else {
-            let a = UIAlertController(title: "无可用模型",
-                                      message: "请先在设置 → 提供商中添加模型",
+            let a = UIAlertController(title: L("无可用模型", "No Models Available"),
+                                      message: L("请先在设置 → 提供商中添加模型",
+                                                 "Please add a model in Settings -> Providers first."),
                                       preferredStyle: .alert)
-            a.addAction(UIAlertAction(title: "好", style: .default))
+            a.addAction(UIAlertAction(title: L("好", "OK"), style: .default))
             present(a, animated: true)
             return
         }
-        let sheet = UIAlertController(title: "选择模型", message: nil, preferredStyle: .actionSheet)
+        let sheet = UIAlertController(title: L("选择模型", "Choose Model"), message: nil, preferredStyle: .actionSheet)
         for m in provider.models {
             let isCurrent = (m == current)
             sheet.addAction(UIAlertAction(title: isCurrent ? "✓ \(m)" : m, style: .default) { [weak self] _ in
@@ -656,13 +673,13 @@ extension ChatViewController: ChatToolbarViewDelegate {
                 self.refreshToolbar()
             })
         }
-        sheet.addAction(UIAlertAction(title: "跟随提供商默认", style: .default) { [weak self] _ in
+        sheet.addAction(UIAlertAction(title: L("跟随提供商默认", "Follow Provider Default"), style: .default) { [weak self] _ in
             guard let self = self else { return }
             self.session.preferredModel = nil
             SessionStore.shared.save(self.session)
             self.refreshToolbar()
         })
-        sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        sheet.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
         present(sheet, animated: true)
     }
 
@@ -673,23 +690,24 @@ extension ChatViewController: ChatToolbarViewDelegate {
 
     func toolbarDidTapSearch(_ toolbar: ChatToolbarView) {
         let providers = SettingsStore.shared.searchProviders
-        let sheet = UIAlertController(title: "搜索服务", message: nil, preferredStyle: .actionSheet)
+        let sheet = UIAlertController(title: L("搜索服务", "Search Service"), message: nil, preferredStyle: .actionSheet)
 
         let noSearch = selectedSearchProvider == nil
-        sheet.addAction(UIAlertAction(title: noSearch ? "✓ 关闭搜索" : "关闭搜索",
+        sheet.addAction(UIAlertAction(title: noSearch ? "✓ \(AppLanguage.searchDisabledLabel)" : AppLanguage.searchDisabledLabel,
                                       style: .default) { [weak self] _ in
             self?.selectedSearchProvider = nil
             self?.refreshToolbar()
         })
         for sp in providers {
             let isCurrent = selectedSearchProvider?.id == sp.id
-            sheet.addAction(UIAlertAction(title: isCurrent ? "✓ \(sp.name)" : sp.name,
+            let displayName = sp.displayName
+            sheet.addAction(UIAlertAction(title: isCurrent ? "✓ \(displayName)" : displayName,
                                           style: .default) { [weak self] _ in
                 self?.selectedSearchProvider = sp
                 self?.refreshToolbar()
             })
         }
-        sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        sheet.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
         present(sheet, animated: true)
     }
 }
@@ -727,7 +745,8 @@ extension ChatViewController: ChatAPIServiceDelegate {
 #if DEBUG
             if session.messages[idx].content.isEmpty,
                (session.messages[idx].thinkingContent ?? "").isEmpty {
-                showError("流式返回为空。\n\n调试信息：\n\(ChatAPIService.shared.debugLastStreamSummary)")
+                showError(L("流式返回为空。\n\n调试信息：\n\(ChatAPIService.shared.debugLastStreamSummary)",
+                            "Stream returned empty.\n\nDebug info:\n\(ChatAPIService.shared.debugLastStreamSummary)"))
             }
 #endif
         }

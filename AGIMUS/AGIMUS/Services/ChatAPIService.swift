@@ -36,10 +36,10 @@ enum APIError: LocalizedError {
     case http(Int, String)
     var errorDescription: String? {
         switch self {
-        case .invalidURL:         return "无效的 Base URL"
-        case .encodingError:      return "请求编码失败"
-        case .noData:             return "未收到数据"
-        case .parseError:         return "响应解析失败"
+        case .invalidURL:         return L("无效的 Base URL", "Invalid Base URL")
+        case .encodingError:      return L("请求编码失败", "Failed to encode request")
+        case .noData:             return L("未收到数据", "No data received")
+        case .parseError:         return L("响应解析失败", "Failed to parse response")
         case .http(let c, let m): return "HTTP \(c): \(m)"
         }
     }

@@ -46,7 +46,7 @@ final class MessageCell: UITableViewCell {
 
     private let retryButton: UIButton = {
         let b = UIButton(type: .system)
-        b.setTitle("重试", for: .normal)
+        b.setTitle(L("重试", "Retry"), for: .normal)
         b.setTitleColor(UIColor(red: 0.75, green: 0.15, blue: 0.15, alpha: 1), for: .normal)
         b.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         b.contentHorizontalAlignment = .left
@@ -56,7 +56,7 @@ final class MessageCell: UITableViewCell {
 
     private let copyButton: UIButton = {
         let b = UIButton(type: .system)
-        b.setTitle("复制", for: .normal)
+        b.setTitle(L("复制", "Copy"), for: .normal)
         b.setTitleColor(UIColor(white: 0.5, alpha: 1), for: .normal)
         b.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         b.contentHorizontalAlignment = .left
@@ -227,7 +227,8 @@ final class MessageCell: UITableViewCell {
                         contentLabel.attributedText = MarkdownRenderer.shared.render(thinking)
                     } else {
                         contentLabel.attributedText = nil
-                        contentLabel.text           = "（回复为空，请检查 API 配置或模型设置）"
+                        contentLabel.text           = L("（回复为空，请检查 API 配置或模型设置）",
+                                                        "(Empty reply. Please check API config or model settings.)")
                         contentLabel.font           = UIFont.italicSystemFont(ofSize: 13)
                         contentLabel.textColor      = UIColor.themed(light: UIColor(white:0.55,alpha:1),
                                                                      dark:  UIColor(white:0.45,alpha:1))

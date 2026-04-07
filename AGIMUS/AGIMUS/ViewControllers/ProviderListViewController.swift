@@ -8,7 +8,7 @@ final class ProviderListViewController: UITableViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "提供商管理"
+        applyLocalization()
         navigationItem.largeTitleDisplayMode = .never
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
                                                             target: self,
@@ -16,12 +16,22 @@ final class ProviderListViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         NotificationCenter.default.addObserver(self, selector: #selector(themeChanged),
                                                name: ThemeManager.didChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(languageChanged),
+                                               name: .appLanguageDidChange, object: nil)
         applyTheme()
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
 
     @objc private func themeChanged() { applyTheme() }
+    @objc private func languageChanged() {
+        applyLocalization()
+        tableView.reloadData()
+    }
+
+    private func applyLocalization() {
+        title = L("提供商管理", "Providers")
+    }
 
     private func applyTheme() {
         tableView.backgroundColor = .agBackground
@@ -49,7 +59,7 @@ final class ProviderListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "Cell")
         let p = providers[indexPath.row]
-        cell.textLabel?.text = p.name
+        cell.textLabel?.text = p.displayName
         cell.detailTextLabel?.text = "\(p.activeModel)  |  \(p.baseURL)"
         cell.detailTextLabel?.textColor = UIColor.themed(
             light: UIColor(white: 0.45, alpha: 1),
@@ -78,16 +88,16 @@ final class ProviderListViewController: UITableViewController {
             navigationController?.pushViewController(vc, animated: true)
         } else {
             // Not active → show action: select or edit
-            let sheet = UIAlertController(title: p.name, message: nil, preferredStyle: .actionSheet)
-            sheet.addAction(UIAlertAction(title: "设为当前提供商", style: .default) { [weak self] _ in
+            let sheet = UIAlertController(title: p.displayName, message: nil, preferredStyle: .actionSheet)
+            sheet.addAction(UIAlertAction(title: L("设为当前提供商", "Set as Active Provider"), style: .default) { [weak self] _ in
                 SettingsStore.shared.activeProviderID = p.id
                 self?.reload()
             })
-            sheet.addAction(UIAlertAction(title: "编辑", style: .default) { [weak self] _ in
+            sheet.addAction(UIAlertAction(title: L("编辑", "Edit"), style: .default) { [weak self] _ in
                 let vc = ProviderEditViewController(provider: p)
                 self?.navigationController?.pushViewController(vc, animated: true)
             })
-            sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+            sheet.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
             present(sheet, animated: true)
         }
     }

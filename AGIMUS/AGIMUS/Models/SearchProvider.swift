@@ -7,15 +7,30 @@ enum SearchProviderType: String, Codable, CaseIterable {
     var displayName: String {
         switch self {
         case .brave:      return "Brave Search"
-        case .bocha:      return "Bocha 博查"
-        case .metaso:     return "Metaso 秘塔"
+        case .bocha:      return L("Bocha 博查", "Bocha")
+        case .metaso:     return L("Metaso 秘塔", "Metaso")
         case .tavily:     return "Tavily"
         case .serper:     return "Serper (Google)"
         case .bing:       return "Bing Web Search"
         case .exa:        return "Exa"
         case .jina:       return "Jina Search"
-        case .duckduckgo: return "DuckDuckGo（免费）"
-        case .custom:     return "自定义"
+        case .duckduckgo: return L("DuckDuckGo（免费）", "DuckDuckGo (Free)")
+        case .custom:     return L("自定义", "Custom")
+        }
+    }
+
+    var legacyDisplayNames: [String] {
+        switch self {
+        case .brave:      return ["Brave Search"]
+        case .bocha:      return ["Bocha 博查", "Bocha"]
+        case .metaso:     return ["Metaso 秘塔", "Metaso"]
+        case .tavily:     return ["Tavily"]
+        case .serper:     return ["Serper (Google)"]
+        case .bing:       return ["Bing Web Search"]
+        case .exa:        return ["Exa"]
+        case .jina:       return ["Jina Search"]
+        case .duckduckgo: return ["DuckDuckGo（免费）", "DuckDuckGo (Free)"]
+        case .custom:     return ["自定义", "Custom"]
         }
     }
 
@@ -50,5 +65,9 @@ struct SearchProvider: Codable {
         self.name       = type.displayName
         self.endpoint   = type.defaultEndpoint
         self.maxResults = 5
+    }
+
+    var displayName: String {
+        type.legacyDisplayNames.contains(name) ? type.displayName : name
     }
 }

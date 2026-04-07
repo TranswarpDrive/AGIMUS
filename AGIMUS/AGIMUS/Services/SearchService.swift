@@ -209,7 +209,7 @@ final class SearchService {
                     if let text = t["Text"] as? String { parts.append("• \(text)") }
                 }
             }
-            return parts.isEmpty ? "未找到相关结果" : parts.joined(separator: "\n\n")
+            return parts.isEmpty ? L("未找到相关结果", "No relevant results found") : parts.joined(separator: "\n\n")
         }, completion: completion)
     }
 

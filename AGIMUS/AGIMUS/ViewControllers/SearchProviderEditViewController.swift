@@ -10,11 +10,11 @@ final class SearchProviderEditViewController: UITableViewController {
         case name, type, endpoint, apiKey, maxResults
         var label: String {
             switch self {
-            case .name:       return "名称"
-            case .type:       return "服务类型"
-            case .endpoint:   return "API 端点"
+            case .name:       return L("名称", "Name")
+            case .type:       return L("服务类型", "Service Type")
+            case .endpoint:   return L("API 端点", "API Endpoint")
             case .apiKey:     return "API Key"
-            case .maxResults: return "最多返回条数"
+            case .maxResults: return L("最多返回条数", "Max Results")
             }
         }
     }
@@ -32,24 +32,35 @@ final class SearchProviderEditViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = isNew ? "添加搜索服务" : "编辑搜索服务"
+        applyLocalization()
         navigationItem.largeTitleDisplayMode = .never
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "保存", style: .done,
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: L("保存", "Save"), style: .done,
                                                             target: self, action: #selector(save))
         if !isNew {
-            let del = UIBarButtonItem(title: "删除", style: .plain, target: self, action: #selector(deleteProvider))
+            let del = UIBarButtonItem(title: L("删除", "Delete"), style: .plain, target: self, action: #selector(deleteProvider))
             del.tintColor = UIColor.systemRed
             navigationItem.leftBarButtonItem = del
         }
         NotificationCenter.default.addObserver(self, selector: #selector(themeChanged),
                                                name: ThemeManager.didChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(languageChanged),
+                                               name: .appLanguageDidChange, object: nil)
         applyTheme()
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
 
     @objc private func themeChanged() { applyTheme() }
+    @objc private func languageChanged() {
+        applyLocalization()
+        tableView.reloadData()
+    }
+
+    private func applyLocalization() {
+        title = isNew ? L("添加搜索服务", "Add Search Service")
+                      : L("编辑搜索服务", "Edit Search Service")
+    }
 
     private func applyTheme() {
         tableView.backgroundColor = .agBackground
@@ -83,24 +94,24 @@ final class SearchProviderEditViewController: UITableViewController {
 
         switch row {
         case .name:
-            cell.detailTextLabel?.text = provider.name
+            cell.detailTextLabel?.text = provider.displayName
             cell.accessoryType = .disclosureIndicator
         case .type:
             cell.detailTextLabel?.text = provider.type.displayName
             cell.accessoryType = .disclosureIndicator
         case .endpoint:
-            let ep = provider.endpoint.isEmpty ? "（使用默认）" : provider.endpoint
+            let ep = provider.endpoint.isEmpty ? L("（使用默认）", "(Use default)") : provider.endpoint
             cell.detailTextLabel?.text = ep.count > 30 ? "…" + ep.suffix(28) : ep
             cell.accessoryType = .disclosureIndicator
         case .apiKey:
             let key = SettingsStore.shared.searchAPIKey(for: provider.id)
-            cell.detailTextLabel?.text = key.isEmpty ? "未设置" : "••••••••"
+            cell.detailTextLabel?.text = key.isEmpty ? L("未设置", "Not set") : "••••••••"
             cell.accessoryType = .disclosureIndicator
             if !provider.type.needsAPIKey {
                 cell.textLabel?.textColor = UIColor.themed(
                     light: UIColor(white: 0.55, alpha: 1),
                     dark:  UIColor(white: 0.45, alpha: 1))
-                cell.detailTextLabel?.text = "不需要"
+                cell.detailTextLabel?.text = L("不需要", "Not required")
                 cell.selectionStyle = .none
                 cell.accessoryType = .none
             }
@@ -129,10 +140,10 @@ final class SearchProviderEditViewController: UITableViewController {
     // MARK: - Field editors
 
     private func editName() {
-        let a = UIAlertController(title: "名称", message: nil, preferredStyle: .alert)
+        let a = UIAlertController(title: L("名称", "Name"), message: nil, preferredStyle: .alert)
         a.addTextField { [weak self] tf in tf.text = self?.provider.name }
-        a.addAction(UIAlertAction(title: "取消", style: .cancel))
-        a.addAction(UIAlertAction(title: "确定", style: .default) { [weak self] _ in
+        a.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        a.addAction(UIAlertAction(title: L("确定", "OK"), style: .default) { [weak self] _ in
             guard let self = self,
                   let text = a.textFields?.first?.text?.trimmingCharacters(in: .whitespaces),
                   !text.isEmpty else { return }
@@ -143,32 +154,38 @@ final class SearchProviderEditViewController: UITableViewController {
     }
 
     private func pickType() {
-        let sheet = UIAlertController(title: "选择服务类型", message: nil, preferredStyle: .actionSheet)
+        let sheet = UIAlertController(title: L("选择服务类型", "Choose Service Type"),
+                                      message: nil,
+                                      preferredStyle: .actionSheet)
         for t in SearchProviderType.allCases {
             let isCurrent = t == provider.type
             sheet.addAction(UIAlertAction(title: isCurrent ? "✓ \(t.displayName)" : t.displayName,
                                           style: .default) { [weak self] _ in
                 guard let self = self else { return }
                 self.provider.type = t
-                self.provider.name = t.displayName
+                if t.legacyDisplayNames.contains(self.provider.name) {
+                    self.provider.name = t.displayName
+                }
                 self.provider.endpoint = t.defaultEndpoint
                 self.tableView.reloadData()
             })
         }
-        sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        sheet.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
         present(sheet, animated: true)
     }
 
     private func editEndpoint() {
-        let a = UIAlertController(title: "API 端点", message: "留空使用默认值", preferredStyle: .alert)
+        let a = UIAlertController(title: L("API 端点", "API Endpoint"),
+                                  message: L("留空使用默认值", "Leave empty to use default."),
+                                  preferredStyle: .alert)
         a.addTextField { [weak self] tf in
             tf.text = self?.provider.endpoint
             tf.placeholder = self?.provider.type.defaultEndpoint
             tf.keyboardType = .URL
             tf.autocapitalizationType = .none
         }
-        a.addAction(UIAlertAction(title: "取消", style: .cancel))
-        a.addAction(UIAlertAction(title: "确定", style: .default) { [weak self] _ in
+        a.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        a.addAction(UIAlertAction(title: L("确定", "OK"), style: .default) { [weak self] _ in
             guard let self = self else { return }
             let text = a.textFields?.first?.text?.trimmingCharacters(in: .whitespaces) ?? ""
             self.provider.endpoint = text.isEmpty ? self.provider.type.defaultEndpoint : text
@@ -185,8 +202,8 @@ final class SearchProviderEditViewController: UITableViewController {
             tf.isSecureTextEntry = true
             tf.clearButtonMode = .whileEditing
         }
-        a.addAction(UIAlertAction(title: "取消", style: .cancel))
-        a.addAction(UIAlertAction(title: "确定", style: .default) { [weak self] _ in
+        a.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        a.addAction(UIAlertAction(title: L("确定", "OK"), style: .default) { [weak self] _ in
             guard let self = self else { return }
             let key = a.textFields?.first?.text ?? ""
             SettingsStore.shared.setSearchAPIKey(key, for: self.provider.id)
@@ -196,13 +213,15 @@ final class SearchProviderEditViewController: UITableViewController {
     }
 
     private func editMaxResults() {
-        let a = UIAlertController(title: "最多返回条数", message: "建议 3-10", preferredStyle: .alert)
+        let a = UIAlertController(title: L("最多返回条数", "Max Results"),
+                                  message: L("建议 3-10", "Recommended: 3-10"),
+                                  preferredStyle: .alert)
         a.addTextField { [weak self] tf in
             tf.text = "\(self?.provider.maxResults ?? 5)"
             tf.keyboardType = .numberPad
         }
-        a.addAction(UIAlertAction(title: "取消", style: .cancel))
-        a.addAction(UIAlertAction(title: "确定", style: .default) { [weak self] _ in
+        a.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        a.addAction(UIAlertAction(title: L("确定", "OK"), style: .default) { [weak self] _ in
             guard let self = self,
                   let text = a.textFields?.first?.text,
                   let n = Int(text), n > 0 else { return }
@@ -220,9 +239,11 @@ final class SearchProviderEditViewController: UITableViewController {
     }
 
     @objc private func deleteProvider() {
-        let a = UIAlertController(title: "删除搜索服务", message: "此操作不可撤销", preferredStyle: .alert)
-        a.addAction(UIAlertAction(title: "取消", style: .cancel))
-        a.addAction(UIAlertAction(title: "删除", style: .destructive) { [weak self] _ in
+        let a = UIAlertController(title: L("删除搜索服务", "Delete Search Service"),
+                                  message: L("此操作不可撤销", "This action cannot be undone."),
+                                  preferredStyle: .alert)
+        a.addAction(UIAlertAction(title: L("取消", "Cancel"), style: .cancel))
+        a.addAction(UIAlertAction(title: L("删除", "Delete"), style: .destructive) { [weak self] _ in
             guard let self = self else { return }
             SettingsStore.shared.deleteSearchProvider(id: self.provider.id)
             self.navigationController?.popViewController(animated: true)

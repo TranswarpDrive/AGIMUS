@@ -9,7 +9,7 @@ struct ChatSession: Codable {
     var updatedAt: Date
     var preferredModel: String?   // nil = 跟随 Provider 当前模型
 
-    init(title: String = "新对话") {
+    init(title: String = AppLanguage.defaultSessionTitle) {
         self.id        = UUID().uuidString
         self.title     = title
         self.messages  = []
@@ -23,7 +23,7 @@ struct ChatSession: Codable {
 
     var displayTitle: String {
         // 只返回 AI 生成的标题；模型不可用时保持"新对话"，不以用户消息代替
-        return title
+        return AppLanguage.isDefaultSessionTitle(title) ? AppLanguage.defaultSessionTitle : title
     }
 
     /// 显示给用户的消息（过滤 system / tool）

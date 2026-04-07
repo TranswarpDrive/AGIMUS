@@ -11,7 +11,7 @@ struct ProviderConfig: Codable {
     var maxTokens: Int         // 0 = 不限制（请求时省略 max_tokens 字段）
     var useStream: Bool
 
-    init(name: String = "新提供商",
+    init(name: String = AppLanguage.defaultProviderName,
          baseURL: String = "https://api.openai.com/v1",
          models: [String] = ["gpt-3.5-turbo"],
          activeModel: String = "gpt-3.5-turbo",
@@ -26,6 +26,10 @@ struct ProviderConfig: Codable {
         self.temperature = temperature
         self.maxTokens   = maxTokens
         self.useStream   = useStream
+    }
+
+    var displayName: String {
+        AppLanguage.isDefaultProviderName(name) ? AppLanguage.defaultProviderName : name
     }
 
     static var `default`: ProviderConfig { ProviderConfig() }
