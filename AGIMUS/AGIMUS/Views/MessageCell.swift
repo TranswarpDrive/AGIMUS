@@ -157,7 +157,8 @@ final class MessageCell: UITableViewCell {
 
     func configure(with message: ChatMessage,
                    isGenerating: Bool = false,
-                   isThinkingExpanded: Bool = false) {
+                   isThinkingExpanded: Bool = false,
+                   highlightQuery: String? = nil) {
         stopTypingAnimation()   // cell 复用时先停动画，按需重启
         let isUser = message.role == .user
 
@@ -254,6 +255,56 @@ final class MessageCell: UITableViewCell {
         retryButton.isHidden = !message.isError
         copyButton.isHidden  = isUser || isGenerating
         actionRow.isHidden   = retryButton.isHidden && copyButton.isHidden
+
+        applyKeywordHighlight(highlightQuery)
+    }
+
+    private func applyKeywordHighlight(_ query: String?) {
+        let text = query?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !text.isEmpty else { return }
+
+        if let attributed = contentLabel.attributedText, attributed.length > 0 {
+            let mutable = NSMutableAttributedString(attributedString: attributed)
+            addHighlightAttributes(to: mutable, query: text)
+            contentLabel.attributedText = mutable
+            return
+        }
+
+        guard let plain = contentLabel.text, !plain.isEmpty else { return }
+        var attrs: [NSAttributedString.Key: Any] = [.font: contentLabel.font ?? UIFont.systemFont(ofSize: 15)]
+        if let color = contentLabel.textColor { attrs[.foregroundColor] = color }
+        let mutable = NSMutableAttributedString(string: plain, attributes: attrs)
+        addHighlightAttributes(to: mutable, query: text)
+        contentLabel.attributedText = mutable
+    }
+
+    private func addHighlightAttributes(to text: NSMutableAttributedString, query: String) {
+        let source = text.string as NSString
+        guard source.length > 0 else { return }
+        let terms = query
+            .split(whereSeparator: { $0.isWhitespace })
+            .map(String.init)
+            .filter { !$0.isEmpty }
+        guard !terms.isEmpty else { return }
+
+        let highlightColor = UIColor.themed(
+            light: UIColor(red: 1.00, green: 0.92, blue: 0.35, alpha: 0.55),
+            dark: UIColor(red: 0.95, green: 0.78, blue: 0.10, alpha: 0.35)
+        )
+
+        for term in terms {
+            var searchRange = NSRange(location: 0, length: source.length)
+            while searchRange.length > 0 {
+                let found = source.range(of: term,
+                                         options: [.caseInsensitive, .diacriticInsensitive],
+                                         range: searchRange)
+                if found.location == NSNotFound { break }
+                text.addAttribute(.backgroundColor, value: highlightColor, range: found)
+                let next = found.location + found.length
+                guard next < source.length else { break }
+                searchRange = NSRange(location: next, length: source.length - next)
+            }
+        }
     }
 
     // MARK: - 打字动画

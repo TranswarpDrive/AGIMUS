@@ -23,6 +23,7 @@ final class ChatToolbarView: UIView {
     private var layoutMode: LayoutMode = .singleLine
     private var didLayoutOnce = false
     private var lastKnownWidth: CGFloat = 0
+    private var needsRebuildOnNextLayout = false
 
     // MARK: - Subviews
     let modelButton: UIButton = {
@@ -112,9 +113,12 @@ final class ChatToolbarView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         let width = bounds.width.rounded(.down)
-        if abs(width - lastKnownWidth) > 0.5 {
+        let widthChanged = abs(width - lastKnownWidth) > 0.5
+        if widthChanged || needsRebuildOnNextLayout {
             lastKnownWidth = width
-            updateLayoutMode(animated: didLayoutOnce)
+            let forceRebuild = widthChanged || needsRebuildOnNextLayout
+            needsRebuildOnNextLayout = false
+            updateLayoutMode(animated: didLayoutOnce, forceRebuild: forceRebuild)
         }
         didLayoutOnce = true
     }
@@ -262,6 +266,7 @@ final class ChatToolbarView: UIView {
         if bounds.width > 0 {
             updateLayoutMode(animated: animated, forceRebuild: true)
         } else {
+            needsRebuildOnNextLayout = true
             setNeedsLayout()
             invalidateIntrinsicContentSize()
         }

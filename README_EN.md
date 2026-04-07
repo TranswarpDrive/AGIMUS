@@ -3,7 +3,7 @@
 [![CI](https://github.com/TranswarpDrive/AGIMUS/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/TranswarpDrive/AGIMUS/actions/workflows/ios-ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-English documentation: `REAMDE_EN.md`  
+English documentation: `README_EN.md`  
 中文文档（默认）: [README.md](README.md)
 
 AGIMUS is a native iOS chat client for OpenAI-compatible LLM providers.

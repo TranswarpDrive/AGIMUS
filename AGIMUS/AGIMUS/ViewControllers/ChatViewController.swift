@@ -11,6 +11,7 @@ final class ChatViewController: UIViewController {
     private var thinkingExpandedIDs = Set<String>()   // 已展开思考的消息 ID
     private var currentOptions = ChatRequestOptions()
     private var selectedSearchProvider: SearchProvider?
+    private let highlightQuery: String?
 
     /// 当前实际使用的 Provider（model 由 session.preferredModel 覆盖）
     private var effectiveProvider: ProviderConfig {
@@ -47,8 +48,10 @@ final class ChatViewController: UIViewController {
     }()
 
     // MARK: - Init
-    init(session: ChatSession) {
+    init(session: ChatSession, highlightQuery: String? = nil) {
         self.session = session
+        let q = highlightQuery?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.highlightQuery = q.isEmpty ? nil : q
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -563,7 +566,8 @@ extension ChatViewController: UITableViewDataSource {
         let isExpanded = thinkingExpandedIDs.contains(msg.id)
         cell.configure(with: msg,
                        isGenerating: isGenerating && isLast && msg.role == .assistant,
-                       isThinkingExpanded: isExpanded)
+                       isThinkingExpanded: isExpanded,
+                       highlightQuery: highlightQuery)
         cell.delegate = self
         return cell
     }

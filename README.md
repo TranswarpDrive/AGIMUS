@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 中文文档（默认）：`README.md`  
-English version: [REAMDE_EN.md](REAMDE_EN.md)
+English version: [README_EN.md](README_EN.md)
 
 AGIMUS 是一个原生 iOS 聊天客户端，面向 OpenAI 兼容协议的大语言模型服务商。
 
