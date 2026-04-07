@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Local assistant / tooling state
+.claude/
+
+# Xcode user-specific files
+**/xcuserdata/
+**/*.xcuserstate
+
+# Build products
+DerivedData/
+build/
+Build/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Fastlane / tooling logs
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# CocoaPods / Carthage
+Pods/
+Carthage/Build/
