@@ -15,7 +15,7 @@ AGIMUS 是一个原生 iOS 聊天客户端，面向 OpenAI 兼容协议的大语
 本项目由以下 AI 工具协作完成：
 
 - Claude Code（Claude Sonnet 4.6）
-- Codex（GPT-5.4 与 GPT-5.4-Codex）
+- Codex（GPT-5.4 与 GPT-5.3-Codex）
 
 仓库内代码不包含人类手写代码成分，是一个纯粹的 AI vibe coding 项目。
 
