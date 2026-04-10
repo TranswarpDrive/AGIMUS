@@ -15,7 +15,7 @@ It is designed for people who want a local-first mobile app that can switch betw
 This project is created by the following AI tools:
 
 - Claude Code (Claude Sonnet 4.6)
-- Codex (GPT-5.4 and GPT-5.4-Codex)
+- Codex (GPT-5.4 and GPT-5.3-Codex)
 
 There is no human-written code in this repository. This is a pure AI vibe coding project.
 
