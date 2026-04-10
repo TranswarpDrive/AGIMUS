@@ -619,24 +619,38 @@ final class ChatAPIService: NSObject {
 
     /// Route content chunks, splitting on <think> / </think> tags
     private func routeContent(_ chunk: String) {
-        var remaining = chunk
+        let openTag = "<think>"
+        let closeTag = "</think>"
+        var remaining = tagBuffer + chunk
+        tagBuffer = ""
+
         while !remaining.isEmpty {
             switch contentMode {
             case .normal:
-                if let r = remaining.range(of: "<think>") {
+                if let r = remaining.range(of: openTag) {
                     let before = String(remaining[..<r.lowerBound])
                     if !before.isEmpty {
                         DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveContentChunk(before) }
                     }
                     remaining = String(remaining[r.upperBound...])
                     contentMode = .thinking
+                    DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveThinkingChunk("") }
                 } else {
-                    let contentChunk = remaining
-                    DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveContentChunk(contentChunk) }
-                    remaining = ""
+                    if let partial = partialTagSuffix(in: remaining, for: openTag) {
+                        let stablePart = String(remaining.dropLast(partial.count))
+                        if !stablePart.isEmpty {
+                            DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveContentChunk(stablePart) }
+                        }
+                        tagBuffer = partial
+                        remaining = ""
+                    } else {
+                        let contentChunk = remaining
+                        DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveContentChunk(contentChunk) }
+                        remaining = ""
+                    }
                 }
             case .thinking:
-                if let r = remaining.range(of: "</think>") {
+                if let r = remaining.range(of: closeTag) {
                     let think = String(remaining[..<r.lowerBound])
                     if !think.isEmpty {
                         DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveThinkingChunk(think) }
@@ -644,12 +658,34 @@ final class ChatAPIService: NSObject {
                     remaining = String(remaining[r.upperBound...])
                     contentMode = .normal
                 } else {
-                    let thinkingChunk = remaining
-                    DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveThinkingChunk(thinkingChunk) }
-                    remaining = ""
+                    if let partial = partialTagSuffix(in: remaining, for: closeTag) {
+                        let stablePart = String(remaining.dropLast(partial.count))
+                        if !stablePart.isEmpty {
+                            DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveThinkingChunk(stablePart) }
+                        }
+                        tagBuffer = partial
+                        remaining = ""
+                    } else {
+                        let thinkingChunk = remaining
+                        DispatchQueue.main.async { self.streamDelegate?.apiServiceDidReceiveThinkingChunk(thinkingChunk) }
+                        remaining = ""
+                    }
                 }
             }
         }
+    }
+
+    private func partialTagSuffix(in text: String, for tag: String) -> String? {
+        let maxLength = min(text.count, max(0, tag.count - 1))
+        guard maxLength > 0 else { return nil }
+
+        for length in stride(from: maxLength, through: 1, by: -1) {
+            let suffix = String(text.suffix(length))
+            if tag.hasPrefix(suffix) {
+                return suffix
+            }
+        }
+        return nil
     }
 
     private func accumulateToolCalls(_ deltas: [[String: Any]]) {

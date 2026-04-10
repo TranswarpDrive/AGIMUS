@@ -104,7 +104,7 @@ final class SessionListViewController: UITableViewController {
 
     // MARK: - Data
     private func refresh() {
-        sessions = SessionStore.shared.sessions
+        sessions = ChatGenerationManager.shared.mergedSessions(SessionStore.shared.sessions)
         applySearch()
     }
 

@@ -3,8 +3,12 @@ import UIKit
 
 protocol MessageCellDelegate: AnyObject {
     func messageCellDidTapRetry(_ cell: MessageCell)
+    func messageCellDidTapEdit(_ cell: MessageCell)
+    func messageCellDidTapRegenerate(_ cell: MessageCell)
     func messageCellDidTapCopy(_ cell: MessageCell, text: String)
     func messageCellDidToggleThinking(_ cell: MessageCell)
+    func messageCellDidTapPreviousVersion(_ cell: MessageCell)
+    func messageCellDidTapNextVersion(_ cell: MessageCell)
 }
 
 final class MessageCell: UITableViewCell {
@@ -44,6 +48,42 @@ final class MessageCell: UITableViewCell {
         return l
     }()
 
+    private let pageIndicatorLabel: UILabel = {
+        let l = UILabel()
+        l.font = UIFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+        l.numberOfLines = 1
+        l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+
+    private let previousVersionButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle("<", for: .normal)
+        b.titleLabel?.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+        b.contentHorizontalAlignment = .center
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+
+    private let nextVersionButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle(">", for: .normal)
+        b.titleLabel?.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+        b.contentHorizontalAlignment = .center
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+
+    private let pageControlStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = 4
+        sv.alignment = .center
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
+    }()
+
     private let retryButton: UIButton = {
         let b = UIButton(type: .system)
         b.setTitle(L("重试", "Retry"), for: .normal)
@@ -54,10 +94,30 @@ final class MessageCell: UITableViewCell {
         return b
     }()
 
+    private let editButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle(L("编辑", "Edit"), for: .normal)
+        b.setTitleColor(.systemBlue, for: .normal)
+        b.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        b.contentHorizontalAlignment = .left
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+
     private let copyButton: UIButton = {
         let b = UIButton(type: .system)
         b.setTitle(L("复制", "Copy"), for: .normal)
         b.setTitleColor(UIColor(white: 0.5, alpha: 1), for: .normal)
+        b.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        b.contentHorizontalAlignment = .left
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+
+    private let regenerateButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle(L("重新生成", "Regenerate"), for: .normal)
+        b.setTitleColor(.systemBlue, for: .normal)
         b.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         b.contentHorizontalAlignment = .left
         b.translatesAutoresizingMaskIntoConstraints = false
@@ -99,12 +159,22 @@ final class MessageCell: UITableViewCell {
         selectionStyle = .none
         backgroundColor = .clear
 
+        pageIndicatorLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        previousVersionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        nextVersionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        pageControlStack.addArrangedSubview(previousVersionButton)
+        pageControlStack.addArrangedSubview(pageIndicatorLabel)
+        pageControlStack.addArrangedSubview(nextVersionButton)
+
         // Action row 内容
         actionRow.addArrangedSubview(retryButton)
+        actionRow.addArrangedSubview(editButton)
+        actionRow.addArrangedSubview(regenerateButton)
         actionRow.addArrangedSubview(copyButton)
         let spacer = UIView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         actionRow.addArrangedSubview(spacer)
+        actionRow.addArrangedSubview(pageControlStack)
 
         // Bottom stack = metadataLabel + actionRow
         bottomStack.addArrangedSubview(metadataLabel)
@@ -150,17 +220,31 @@ final class MessageCell: UITableViewCell {
             self.delegate?.messageCellDidToggleThinking(self)
         }
         retryButton.addTarget(self, action: #selector(didTapRetry), for: .touchUpInside)
+        editButton.addTarget(self, action: #selector(didTapEdit), for: .touchUpInside)
+        regenerateButton.addTarget(self, action: #selector(didTapRegenerate), for: .touchUpInside)
         copyButton.addTarget(self, action: #selector(didTapCopy), for: .touchUpInside)
+        previousVersionButton.addTarget(self, action: #selector(didTapPreviousVersion), for: .touchUpInside)
+        nextVersionButton.addTarget(self, action: #selector(didTapNextVersion), for: .touchUpInside)
     }
 
     // MARK: - Configure
 
     func configure(with message: ChatMessage,
+                   displayVersion: ChatMessageVersion,
+                   currentPage: Int,
+                   pageCount: Int,
                    isGenerating: Bool = false,
+                   isThinkingStreaming: Bool = false,
                    isThinkingExpanded: Bool = false,
-                   highlightQuery: String? = nil) {
+                   highlightQuery: String? = nil,
+                   canRegenerate: Bool = false,
+                   canEditMessage: Bool = false) {
         stopTypingAnimation()   // cell 复用时先停动画，按需重启
         let isUser = message.role == .user
+        retryButton.setTitle(L("重试", "Retry"), for: .normal)
+        editButton.setTitle(L("编辑", "Edit"), for: .normal)
+        regenerateButton.setTitle(L("重新生成", "Regenerate"), for: .normal)
+        copyButton.setTitle(L("复制", "Copy"), for: .normal)
 
         // ── 背景色（支持深色模式）──────────────────────────────────
         contentView.backgroundColor = isUser ? .agCellUser : .agCellBot
@@ -172,18 +256,18 @@ final class MessageCell: UITableViewCell {
                 light: UIColor(red: 0.20, green: 0.40, blue: 0.80, alpha: 1),
                 dark:  UIColor(red: 0.45, green: 0.65, blue: 1.00, alpha: 1))
         } else {
-            senderLabel.text      = message.modelName ?? "AI"
+            senderLabel.text      = displayVersion.modelName ?? "AI"
             senderLabel.textColor = UIColor.themed(
                 light: UIColor(red: 0.20, green: 0.50, blue: 0.30, alpha: 1),
                 dark:  UIColor(red: 0.40, green: 0.78, blue: 0.50, alpha: 1))
         }
 
         // ── 思考视图 ────────────────────────────────────────────────
-        let hasThinking = !isUser && message.thinkingContent != nil
+        let hasThinking = !isUser && displayVersion.thinkingContent != nil
         thinkingView.isHidden = !hasThinking
         if hasThinking {
-            thinkingView.configure(content: message.thinkingContent ?? "",
-                                   isStreaming: isGenerating,
+            thinkingView.configure(content: displayVersion.thinkingContent ?? "",
+                                   isStreaming: isThinkingStreaming,
                                    isExpanded: isThinkingExpanded)
         }
 
@@ -194,16 +278,27 @@ final class MessageCell: UITableViewCell {
         // ── 消息正文 ────────────────────────────────────────────────
         if isUser {
             contentLabel.attributedText = nil
-            contentLabel.text           = message.content
+            contentLabel.text           = displayVersion.content
             contentLabel.font           = UIFont.systemFont(ofSize: 15)
-            contentLabel.textColor      = message.isError
+            contentLabel.textColor      = displayVersion.isError
                 ? UIColor.themed(light: UIColor(red: 0.55, green: 0.10, blue: 0.10, alpha: 1),
                                  dark:  UIColor(red: 0.85, green: 0.35, blue: 0.35, alpha: 1))
                 : .agTextBot
         } else {
-            // 内容为空 + 生成中 → 显示打字动画（流式第一包到来前 / 非流式等待中通用）
-            if message.content.isEmpty && isGenerating {
-                if let thinking = message.thinkingContent, !thinking.isEmpty {
+            if displayVersion.isError {
+                contentLabel.attributedText = nil
+                contentLabel.text = displayVersion.content
+                contentLabel.font = UIFont.systemFont(ofSize: 14)
+                contentLabel.textColor = UIColor.themed(
+                    light: UIColor(red: 0.62, green: 0.15, blue: 0.15, alpha: 1),
+                    dark: UIColor(red: 0.92, green: 0.42, blue: 0.42, alpha: 1)
+                )
+            } else if isThinkingStreaming && displayVersion.content.isEmpty {
+                contentLabel.attributedText = nil
+                contentLabel.text = nil
+            } else if displayVersion.content.isEmpty && isGenerating {
+                // 内容为空 + 生成中 → 显示打字动画（流式第一包到来前 / 非流式等待中通用）
+                if let thinking = displayVersion.thinkingContent, !thinking.isEmpty {
                     // 推理模型：thinking 已到但 content 还未到，渲染思考内容 + 光标
                     contentLabel.text           = nil
                     contentLabel.attributedText = MarkdownRenderer.shared.render(thinking + "▌")
@@ -220,10 +315,10 @@ final class MessageCell: UITableViewCell {
             } else {
                 // 有内容（或生成已结束）
                 let cursor = isGenerating ? "▌" : ""
-                let body   = message.content + cursor
+                let body   = displayVersion.content + cursor
                 if body.isEmpty {
                     // 生成已结束但内容为空：兜底回退
-                    if let thinking = message.thinkingContent, !thinking.isEmpty {
+                    if let thinking = displayVersion.thinkingContent, !thinking.isEmpty {
                         contentLabel.text           = nil
                         contentLabel.attributedText = MarkdownRenderer.shared.render(thinking)
                     } else {
@@ -243,7 +338,7 @@ final class MessageCell: UITableViewCell {
 
         // ── 元数据 ──────────────────────────────────────────────────
         if !isUser {
-            let meta = message.metadataLine
+            let meta = displayVersion.metadataLine
             metadataLabel.text    = meta
             metadataLabel.isHidden = meta.isEmpty
         } else {
@@ -251,10 +346,28 @@ final class MessageCell: UITableViewCell {
             metadataLabel.isHidden = true
         }
 
+        let hasPageControls = pageCount > 1 && !isGenerating
+        pageControlStack.isHidden = !hasPageControls
+        pageIndicatorLabel.text = "\(currentPage + 1)/\(pageCount)"
+        pageIndicatorLabel.textColor = UIColor.themed(
+            light: UIColor(white: 0.42, alpha: 1),
+            dark: UIColor(white: 0.60, alpha: 1)
+        )
+        previousVersionButton.isEnabled = hasPageControls && currentPage > 0
+        nextVersionButton.isEnabled = hasPageControls && currentPage < pageCount - 1
+        previousVersionButton.alpha = previousVersionButton.isEnabled ? 1.0 : 0.35
+        nextVersionButton.alpha = nextVersionButton.isEnabled ? 1.0 : 0.35
+
         // ── 操作按钮 ────────────────────────────────────────────────
-        retryButton.isHidden = !message.isError
-        copyButton.isHidden  = isUser || isGenerating
-        actionRow.isHidden   = retryButton.isHidden && copyButton.isHidden
+        retryButton.isHidden = !displayVersion.isError || !isUser || currentPage != pageCount - 1
+        editButton.isHidden = !isUser || isGenerating || !canEditMessage
+        regenerateButton.isHidden = isUser || isGenerating || !canRegenerate
+        copyButton.isHidden  = isGenerating
+        actionRow.isHidden   = retryButton.isHidden
+            && editButton.isHidden
+            && regenerateButton.isHidden
+            && copyButton.isHidden
+            && pageControlStack.isHidden
 
         applyKeywordHighlight(highlightQuery)
     }
@@ -336,8 +449,12 @@ final class MessageCell: UITableViewCell {
 
     // MARK: - Actions
     @objc private func didTapRetry() { delegate?.messageCellDidTapRetry(self) }
+    @objc private func didTapEdit() { delegate?.messageCellDidTapEdit(self) }
+    @objc private func didTapRegenerate() { delegate?.messageCellDidTapRegenerate(self) }
     @objc private func didTapCopy()  {
         let text = contentLabel.attributedText?.string ?? contentLabel.text ?? ""
         delegate?.messageCellDidTapCopy(self, text: text)
     }
+    @objc private func didTapPreviousVersion() { delegate?.messageCellDidTapPreviousVersion(self) }
+    @objc private func didTapNextVersion() { delegate?.messageCellDidTapNextVersion(self) }
 }

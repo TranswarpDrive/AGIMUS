@@ -25,7 +25,10 @@ There is no human-written code in this repository. This is a pure AI vibe coding
 - Streaming and non-streaming responses
 - Optional thinking or reasoning display for supported models
 - Optional web search integration through multiple search providers
-- Local conversation history
+- Local conversation history with in-app chat-history search
+- Reply regeneration and previous-user-message editing with paged version history
+- Request failures preserved as copyable and regeneratable assistant messages
+- Ongoing AI generation continues inside the app when navigating back to the session list or settings
 - API keys stored in the iOS Keychain
 - Automatic conversation title generation
 - Light mode, dark mode, and system-following appearance

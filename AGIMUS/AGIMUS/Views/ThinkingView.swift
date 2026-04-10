@@ -96,13 +96,19 @@ final class ThinkingView: UIView {
     func configure(content: String, isStreaming: Bool, isExpanded: Bool) {
         contentTextView.text = content
         if isStreaming {
-            headerButton.setTitle(L("💭  思考中…", "💭  Thinking…"), for: .normal)
+            headerButton.setTitle(L("💭  思考中…（\(content.count) 字）",
+                                    "💭  Thinking… (\(content.count) chars)"),
+                                  for: .normal)
         } else {
             headerButton.setTitle(L("💭  思考过程（\(content.count) 字）",
                                     "💭  Reasoning (\(content.count) chars)"),
                                   for: .normal)
         }
         setExpanded(isExpanded, animated: false)
+        if isExpanded, !content.isEmpty {
+            let range = NSRange(location: max(0, contentTextView.text.count - 1), length: 1)
+            contentTextView.scrollRangeToVisible(range)
+        }
     }
 
     func appendThinkingChunk(_ chunk: String) {

@@ -23,6 +23,7 @@
 		AA00000AAA00000AAA00000A /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000009AA000009AA000009 /* SettingsStore.swift */; };
 		AA00000CAA00000CAA00000C /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000BAA00000BAA00000B /* SessionStore.swift */; };
 		AA00000EAA00000EAA00000E /* ChatAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000DAA00000DAA00000D /* ChatAPIService.swift */; };
+		EE000001EE000001EE000001 /* ChatGenerationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000002EE000002EE000002 /* ChatGenerationManager.swift */; };
 		AA000010AA000010AA000010 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000FAA00000FAA00000F /* Extensions.swift */; };
 		DD000001DD000001DD000001 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000002DD000002DD000002 /* AppLanguage.swift */; };
 		CC000021 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000020 /* ThemeManager.swift */; };
@@ -81,6 +82,7 @@
 		AA000009AA000009AA000009 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		AA00000BAA00000BAA00000B /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		AA00000DAA00000DAA00000D /* ChatAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAPIService.swift; sourceTree = "<group>"; };
+		EE000002EE000002EE000002 /* ChatGenerationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGenerationManager.swift; sourceTree = "<group>"; };
 		AA00000FAA00000FAA00000F /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		DD000002DD000002DD000002 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		CC000020 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
@@ -201,6 +203,7 @@
 				AA000009AA000009AA000009 /* SettingsStore.swift */,
 				AA00000BAA00000BAA00000B /* SessionStore.swift */,
 				AA00000DAA00000DAA00000D /* ChatAPIService.swift */,
+				EE000002EE000002EE000002 /* ChatGenerationManager.swift */,
 				CC000003 /* SearchService.swift */,
 			);
 			path = Services;
@@ -380,6 +383,7 @@
 				AA00000AAA00000AAA00000A /* SettingsStore.swift in Sources */,
 				AA00000CAA00000CAA00000C /* SessionStore.swift in Sources */,
 				AA00000EAA00000EAA00000E /* ChatAPIService.swift in Sources */,
+				EE000001EE000001EE000001 /* ChatGenerationManager.swift in Sources */,
 				AA000010AA000010AA000010 /* Extensions.swift in Sources */,
 				DD000001DD000001DD000001 /* AppLanguage.swift in Sources */,
 				AA000012AA000012AA000012 /* MarkdownRenderer.swift in Sources */,
@@ -576,7 +580,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 9M57R2AJ48;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = AGIMUS/Info.plist;
@@ -587,7 +591,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = caldarinavyfleet.AGIMUS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -605,7 +609,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 9M57R2AJ48;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = AGIMUS/Info.plist;
@@ -616,7 +620,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = caldarinavyfleet.AGIMUS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -634,11 +638,11 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 9M57R2AJ48;
 				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = caldarinavyfleet.AGIMUSTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -654,11 +658,11 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 9M57R2AJ48;
 				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = caldarinavyfleet.AGIMUSTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -673,10 +677,10 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 9M57R2AJ48;
 				GENERATE_INFOPLIST_FILE = NO;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = caldarinavyfleet.AGIMUSUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -691,10 +695,10 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 9M57R2AJ48;
 				GENERATE_INFOPLIST_FILE = NO;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = caldarinavyfleet.AGIMUSUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
